@@ -53,4 +53,20 @@ pub mod iam_voter_weight {
     pub fn close_voter_weight_record(ctx: Context<CloseVoterWeightRecord>) -> Result<()> {
         instructions::close_voter_weight_record::close_voter_weight_record(ctx)
     }
+
+    pub fn create_max_voter_weight_record(
+        ctx: Context<CreateMaxVoterWeightRecord>,
+    ) -> Result<()> {
+        instructions::create_max_voter_weight_record::create_max_voter_weight_record(ctx)
+    }
+
+    pub fn update_max_voter_weight_record(
+        ctx: Context<UpdateMaxVoterWeightRecord>,
+        max_voter_weight: u64,
+    ) -> Result<()> {
+        instructions::update_max_voter_weight_record::update_max_voter_weight_record(
+            ctx,
+            max_voter_weight,
+        )
+    }
 }

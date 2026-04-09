@@ -281,3 +281,66 @@ export function buildCloseRegistrarInstruction(
     data: disc,
   });
 }
+
+export function buildCreateMaxVoterWeightRecordInstruction(
+  registrarPda: PublicKey,
+  realmPda: PublicKey,
+  communityMint: PublicKey,
+  realmAuthority: PublicKey,
+  payerKey: PublicKey
+): { instruction: TransactionInstruction; maxVwrPda: PublicKey } {
+  const [maxVwrPda] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("max-voter-weight-record"),
+      realmPda.toBuffer(),
+      communityMint.toBuffer(),
+    ],
+    PLUGIN_PROGRAM_ID
+  );
+
+  const disc = anchorDiscriminator("create_max_voter_weight_record");
+
+  return {
+    instruction: new TransactionInstruction({
+      programId: PLUGIN_PROGRAM_ID,
+      keys: [
+        { pubkey: registrarPda, isSigner: false, isWritable: false },
+        { pubkey: maxVwrPda, isSigner: false, isWritable: true },
+        { pubkey: realmPda, isSigner: false, isWritable: false },
+        { pubkey: realmAuthority, isSigner: true, isWritable: false },
+        { pubkey: payerKey, isSigner: true, isWritable: true },
+        {
+          pubkey: SystemProgram.programId,
+          isSigner: false,
+          isWritable: false,
+        },
+      ],
+      data: disc,
+    }),
+    maxVwrPda,
+  };
+}
+
+export function buildUpdateMaxVoterWeightRecordInstruction(
+  registrarPda: PublicKey,
+  maxVwrPda: PublicKey,
+  realmPda: PublicKey,
+  realmAuthority: PublicKey,
+  maxVoterWeight: bigint
+): TransactionInstruction {
+  const disc = anchorDiscriminator("update_max_voter_weight_record");
+  const data = Buffer.alloc(8 + 8);
+  disc.copy(data, 0);
+  data.writeBigUInt64LE(maxVoterWeight, 8);
+
+  return new TransactionInstruction({
+    programId: PLUGIN_PROGRAM_ID,
+    keys: [
+      { pubkey: registrarPda, isSigner: false, isWritable: false },
+      { pubkey: maxVwrPda, isSigner: false, isWritable: true },
+      { pubkey: realmPda, isSigner: false, isWritable: false },
+      { pubkey: realmAuthority, isSigner: true, isWritable: false },
+    ],
+    data,
+  });
+}
