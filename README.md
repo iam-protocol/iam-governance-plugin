@@ -26,12 +26,12 @@ The voter weight expires after ~100 slots, forcing the update to happen in the s
 |-------------|---------|
 | `create_registrar` | DAO admin configures min Trust Score and max verification age |
 | `update_registrar` | DAO admin updates configuration parameters |
+| `close_registrar` | DAO admin closes the registrar and reclaims rent |
 | `create_voter_weight_record` | Initialize a voter's weight record (born expired) |
 | `update_voter_weight_record` | Read IAM IdentityState, validate trust score and recency, set voter_weight = 1 |
 | `close_voter_weight_record` | Voter closes their record and reclaims rent |
-| `create_max_voter_weight_record` | Initialize the max voter weight for quorum calculations |
-| `update_max_voter_weight_record` | DAO admin updates the max voter weight (admin-managed) |
-| `close_registrar` | DAO admin closes the registrar and reclaims rent |
+| `create_max_voter_weight_record` | DAO admin initializes quorum tracking (realm authority required) |
+| `update_max_voter_weight_record` | DAO admin sets the max voter weight (never expires, admin-managed) |
 
 ## Architecture
 
@@ -92,6 +92,10 @@ npx ts-mocha -p ./tsconfig.json -t 120000 tests/**/*.ts
 | spl-governance-mythic | 3.1.2 | Realm data validation |
 | spl-governance-addin-api-mythic | 0.1.6 | VoterWeightRecord type |
 | solana-program | 2.2.1 | Solana runtime |
+
+## Realms UI Compatibility
+
+The Realms V2 UI supports custom voter weight plugins. Any DAO admin can configure IAM as their voter weight addin by pasting the program ID (`99nwXzcugse3x8kxE9v6mxZiq8T9gHDoznaaG6qcw534`) in the "Custom voting program ID" field in the realm settings. No frontend changes required.
 
 ## Related
 
