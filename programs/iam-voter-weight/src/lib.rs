@@ -22,6 +22,14 @@ pub mod iam_voter_weight {
         instructions::create_registrar::create_registrar(ctx, min_trust_score, max_verification_age)
     }
 
+    pub fn update_registrar(
+        ctx: Context<UpdateRegistrar>,
+        min_trust_score: u16,
+        max_verification_age: i64,
+    ) -> Result<()> {
+        instructions::update_registrar::update_registrar(ctx, min_trust_score, max_verification_age)
+    }
+
     pub fn create_voter_weight_record(
         ctx: Context<CreateVoterWeightRecord>,
         governing_token_owner: Pubkey,
@@ -36,5 +44,13 @@ pub mod iam_voter_weight {
         ctx: Context<'_, '_, 'info, 'info, UpdateVoterWeightRecord<'info>>,
     ) -> Result<()> {
         instructions::update_voter_weight_record::update_voter_weight_record(ctx)
+    }
+
+    pub fn close_registrar(ctx: Context<CloseRegistrar>) -> Result<()> {
+        instructions::close_registrar::close_registrar(ctx)
+    }
+
+    pub fn close_voter_weight_record(ctx: Context<CloseVoterWeightRecord>) -> Result<()> {
+        instructions::close_voter_weight_record::close_voter_weight_record(ctx)
     }
 }

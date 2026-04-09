@@ -6,3 +6,12 @@ pub use create_voter_weight_record::*;
 
 pub mod update_voter_weight_record;
 pub use update_voter_weight_record::*;
+
+pub mod update_registrar;
+pub use update_registrar::*;
+
+pub mod close_registrar;
+pub use close_registrar::*;
+
+pub mod close_voter_weight_record;
+pub use close_voter_weight_record::*;
