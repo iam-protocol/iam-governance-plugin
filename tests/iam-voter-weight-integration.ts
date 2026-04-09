@@ -25,6 +25,8 @@ import {
   buildUpdateVoterWeightRecordInstruction,
   buildCloseVoterWeightRecordInstruction,
   buildCloseRegistrarInstruction,
+  buildCreateMaxVoterWeightRecordInstruction,
+  buildUpdateMaxVoterWeightRecordInstruction,
 } from "./helpers";
 
 // Deterministic test keypairs (must match scripts/generate-test-fixtures.ts)
@@ -678,6 +680,114 @@ describe("iam-voter-weight integration", () => {
         closeRegRealmPda,
         wrongAuth.publicKey,
         wrongAuth.publicKey
+      );
+
+      const tx = new Transaction().add(ix);
+      try {
+        await sendAndConfirmTransaction(connection, tx, [wrongAuth]);
+        expect.fail("Should have failed");
+      } catch (err: any) {
+        expectError(err, 6000); // InvalidRealmAuthority
+      }
+    });
+  });
+
+  describe("max voter weight record", () => {
+    let mvwrRealmPda: PublicKey;
+    let mvwrRegistrarPda: PublicKey;
+    let mvwrMint: PublicKey;
+    let maxVwrPda: PublicKey;
+
+    before(async () => {
+      mvwrMint = await createMint(payer);
+      const realmName = `MVWR-Realm-${Date.now().toString(36)}`;
+      const realm = buildCreateRealmInstruction(
+        realmName,
+        payer.publicKey,
+        mvwrMint,
+        payer.publicKey,
+        PLUGIN_PROGRAM_ID
+      );
+      mvwrRealmPda = realm.realmPda;
+      const realmTx = new Transaction().add(realm.instruction);
+      await sendAndConfirmTransaction(connection, realmTx, [payer]);
+
+      const registrar = buildCreateRegistrarInstruction(
+        mvwrRealmPda,
+        mvwrMint,
+        payer.publicKey,
+        payer.publicKey,
+        100,
+        2000000000n
+      );
+      mvwrRegistrarPda = registrar.registrarPda;
+      const regTx = new Transaction().add(registrar.instruction);
+      await sendAndConfirmTransaction(connection, regTx, [payer]);
+    });
+
+    it("creates max voter weight record (born expired)", async () => {
+      const result = buildCreateMaxVoterWeightRecordInstruction(
+        mvwrRegistrarPda,
+        mvwrRealmPda,
+        mvwrMint,
+        payer.publicKey,
+        payer.publicKey
+      );
+      maxVwrPda = result.maxVwrPda;
+
+      const tx = new Transaction().add(result.instruction);
+      await sendAndConfirmTransaction(connection, tx, [payer]);
+
+      const account = await connection.getAccountInfo(maxVwrPda);
+      expect(account).to.not.be.null;
+      expect(account!.owner.toBase58()).to.equal(PLUGIN_PROGRAM_ID.toBase58());
+
+      // max_voter_weight at offset 8+32+32=72, u64 LE
+      const maxWeight = account!.data.readBigUInt64LE(72);
+      expect(maxWeight).to.equal(0n);
+
+      // max_voter_weight_expiry: Option tag at 80, value at 81
+      const expiryTag = account!.data.readUInt8(80);
+      expect(expiryTag).to.equal(1); // Some
+      const expiryValue = account!.data.readBigUInt64LE(81);
+      expect(expiryValue).to.equal(0n); // expired
+    });
+
+    it("updates max voter weight record", async () => {
+      const ix = buildUpdateMaxVoterWeightRecordInstruction(
+        mvwrRegistrarPda,
+        maxVwrPda,
+        mvwrRealmPda,
+        payer.publicKey,
+        100n // max 100 verified humans in this DAO
+      );
+
+      const tx = new Transaction().add(ix);
+      await sendAndConfirmTransaction(connection, tx, [payer]);
+
+      const account = await connection.getAccountInfo(maxVwrPda);
+      const maxWeight = account!.data.readBigUInt64LE(72);
+      expect(maxWeight).to.equal(100n);
+
+      // Expiry should be None (admin-managed, never expires)
+      const expiryTag = account!.data.readUInt8(80);
+      expect(expiryTag).to.equal(0); // None
+    });
+
+    it("rejects update with wrong authority", async () => {
+      const wrongAuth = Keypair.generate();
+      const sig = await connection.requestAirdrop(
+        wrongAuth.publicKey,
+        LAMPORTS_PER_SOL
+      );
+      await connection.confirmTransaction(sig);
+
+      const ix = buildUpdateMaxVoterWeightRecordInstruction(
+        mvwrRegistrarPda,
+        maxVwrPda,
+        mvwrRealmPda,
+        wrongAuth.publicKey,
+        999n
       );
 
       const tx = new Transaction().add(ix);
