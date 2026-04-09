@@ -1,21 +1,21 @@
 # IAM Voter Weight Plugin
 
-SPL Governance voter weight plugin for [IAM Protocol](https://iam-human.io). Gates DAO voting on behavioral proof-of-humanity verification.
+SPL Governance voter weight plugin for [IAM Protocol](https://iam-human.io). Adds human liveness verification to DAO governance on Solana.
 
 ## What it does
 
-DAOs on [Realms](https://app.realms.today) can configure this plugin to require members to have a valid IAM Anchor with sufficient Trust Score before casting votes, creating proposals, or participating in governance.
+DAOs on [Realms](https://app.realms.today) can configure this plugin to require voters to be recently verified humans with sustained behavioral history. Bots, automated scripts, and dormant wallets are excluded from governance.
 
-One person, one vote, verified through behavioral consistency over time. No face scans. No document checks. No hardware.
+Designed to layer on top of existing voter weight plugins. Chain IAM with token-voter to require both token holdings and proof of human presence. Chain with quadratic voting for verified-human quadratic weights.
 
 ## How it works
 
 1. DAO admin calls `create_registrar` with a minimum Trust Score and maximum verification age
 2. Each voter calls `create_voter_weight_record` to initialize their record
 3. Before voting, the voter calls `update_voter_weight_record` which reads their IAM IdentityState PDA cross-program and checks:
-   - Trust Score >= minimum configured by the DAO
-   - Last verification is recent enough (within max_verification_age seconds)
-4. If both pass, voter_weight is set to 1 (one person, one vote) with a short expiry (~40 seconds)
+   - Trust Score >= minimum configured by the DAO (proves sustained behavioral history)
+   - Last verification is recent enough (proves the human is actively engaged)
+4. If both pass, voter_weight is set to 1 with a short expiry (~40 seconds)
 5. The governance program reads the VoterWeightRecord and allows the vote
 
 The voter weight expires after ~100 slots, forcing the update to happen in the same transaction as the governance action. This prevents stale weight records from being reused.
