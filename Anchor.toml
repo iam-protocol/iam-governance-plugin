@@ -28,3 +28,11 @@ program = "tests/fixtures/iam_anchor.so"
 [[test.genesis]]
 address = "GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw"
 program = "tests/fixtures/spl_governance.so"
+
+[[test.validator.account]]
+address = "63cKuvoe9WuNH9Ds6aXF7iSc4jHmJc4ZkxdHTaitJ5tr"
+filename = "tests/fixtures/identity-state-a.json"
+
+[[test.validator.account]]
+address = "73gAPp8WuNzdHh4E5ySQNFR3jpw8qs5YFaYPp8iyt6FZ"
+filename = "tests/fixtures/identity-state-b.json"

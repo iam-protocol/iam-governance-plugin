@@ -20,6 +20,17 @@ One person, one vote, verified through behavioral consistency over time. No face
 
 The voter weight expires after ~100 slots, forcing the update to happen in the same transaction as the governance action. This prevents stale weight records from being reused.
 
+## Instructions
+
+| Instruction | Purpose |
+|-------------|---------|
+| `create_registrar` | DAO admin configures min Trust Score and max verification age |
+| `update_registrar` | DAO admin updates configuration parameters |
+| `create_voter_weight_record` | Initialize a voter's weight record (born expired) |
+| `update_voter_weight_record` | Read IAM IdentityState, validate trust score and recency, set voter_weight = 1 |
+| `close_voter_weight_record` | Voter closes their record and reclaims rent |
+| `close_registrar` | DAO admin closes the registrar and reclaims rent |
+
 ## Architecture
 
 ```
@@ -53,8 +64,23 @@ Requires:
 ## Test
 
 ```bash
-anchor test
+# Generate test fixtures (one-time)
+npx tsx scripts/generate-test-fixtures.ts
+
+# Start local validator with genesis programs and fixture accounts
+solana-test-validator \
+  --bpf-program 99nwXzcugse3x8kxE9v6mxZiq8T9gHDoznaaG6qcw534 target/deploy/iam_voter_weight.so \
+  --bpf-program GZYwTp2ozeuRA5Gof9vs4ya961aANcJBdUzB7LN6q4b2 tests/fixtures/iam_anchor.so \
+  --bpf-program GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw tests/fixtures/spl_governance.so \
+  --account 63cKuvoe9WuNH9Ds6aXF7iSc4jHmJc4ZkxdHTaitJ5tr tests/fixtures/identity-state-a.json \
+  --account 73gAPp8WuNzdHh4E5ySQNFR3jpw8qs5YFaYPp8iyt6FZ tests/fixtures/identity-state-b.json \
+  --reset --quiet
+
+# Run all tests (in a separate terminal)
+npx ts-mocha -p ./tsconfig.json -t 120000 tests/**/*.ts
 ```
+
+35 tests: 20 unit tests (byte layout, PDA derivation, validation logic) + 15 integration tests (real transactions against local validator with IAM Anchor and spl-governance loaded as genesis programs).
 
 ## Dependencies
 
