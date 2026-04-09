@@ -1,0 +1,18 @@
+[workspace]
+members = ["programs/iam-voter-weight"]
+resolver = "2"
+
+[workspace.dependencies]
+anchor-lang = "0.31.1"
+solana-program = "=2.2.1"
+spl-governance = { package = "spl-governance-mythic", version = "3.1.2", features = ["no-entrypoint"] }
+spl-governance-addin-api = { package = "spl-governance-addin-api-mythic", version = "0.1.6" }
+borsh_1 = { package = "borsh", version = "1" }
+
+[profile.release]
+overflow-checks = true
+
+# Cap transitive deps to avoid edition2024 incompatibility with Solana platform-tools (Rust 1.84)
+[workspace.metadata.dep-caps]
+# Documentation only -- actual enforcement is via Cargo.lock
+# blake3 <= 1.8.3, crypto-common <= 0.1.x, digest <= 0.10.x
